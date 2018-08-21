@@ -72,6 +72,22 @@ class Message(object):
                     text = self._render_text(att["text"].strip())
                     message.append(text)
 
+            if self._message.get('subtype', None) == 'file_share':
+                thefile = self._message['file']
+                minetype = thefile['mimetype']
+                if minetype.split('/')[0] == 'image':
+                    isimage = True
+                else:
+                    isimage = False
+                url = thefile['url_private']
+                url_download = thefile['url_private_download']
+            
+                message.append('<a href="%s">Download File</a>' % url_download)
+
+            if isimage:
+                message.append('<img class="file" src="%s">' % url)
+
+
         file_link = self._message.get("file", {})
         # We would like to show file if it is image type
         if (
@@ -210,7 +226,7 @@ class Message(object):
     def _sub_channel_ref(self, matchobj):
         channel_id = matchobj.group(0)[2:-1]
         try:
-            channel_name = self.__CHANNEL_DATA[channel_id]["name"]
+            channel_name = self.__CHANNEL_DATA.get(channel_id, {}).get("name", 'NotExist')
         except KeyError as e:
             logging.error("A channel reference was detected but metadata "
                           "not found in channels.json: {}".format(e))
